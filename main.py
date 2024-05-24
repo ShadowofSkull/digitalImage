@@ -1,32 +1,36 @@
 import cv2
-import matplotlib.pyplot as plt
 import numpy as np
-import time
 
 # Obtain the path of the video from the user.
-file_name = input("Enter the name of the video: ")
+file_name = input("Enter the name of the video (no ext e.g. mp4): ")
 # Read the video
 vid = cv2.VideoCapture(f"./vids/{file_name}.mp4")
 
+fps = 30.0
 success, frame = vid.read()
 shape = frame.shape
 resolution = (shape[1], shape[0])
 out = cv2.VideoWriter(
     f"./out/{file_name}_processed_video.avi",  # Set the file name of the new video.
     cv2.VideoWriter_fourcc(*"MJPG"),  # Set the codec.
-    30.0,  # Set the frame rate.
+    fps,  # Set the frame rate.
     resolution,  # Set the resolution (width, height).
 )
 
 logo = cv2.imread("./imgs/logo.png")
+logo_size = 64
+logo_spacing = 50
+
+# Resize watermark in case of different resolution
 watermark1 = cv2.imread("./imgs/watermark1.png")
 watermark1 = cv2.resize(watermark1, resolution)
 watermark2 = cv2.imread("./imgs/watermark2.png")
 watermark2 = cv2.resize(watermark2, resolution)
+# Set the watermark to be displayed initially
+watermark_num = 2
 brightness_threshold = 135
 total_no_frames = vid.get(cv2.CAP_PROP_FRAME_COUNT)  # Get the total number of frames.
 fade_val = 255
-start_time = time.time()
 
 for frame_count in range(0, int(total_no_frames)):  # To loop through all the frames.
     success, frame = vid.read()  # Read a single frame from the video.
@@ -39,15 +43,21 @@ for frame_count in range(0, int(total_no_frames)):  # To loop through all the fr
         frame = cv2.subtract(frame, fade_val)
         fade_val -= 5
     # Adding logo to every frame
-    frame[606:670, 1166:1230] = logo
+    
+    frame[logo_spacing: logo_spacing + logo_size, logo_spacing: logo_spacing + logo_size] = logo
 
     # Adding alternating watermark every 5s
-    end_time = time.time()
+    frames_per_5s = int(fps * 5)
+    if frame_count % frames_per_5s == 0:
+        match watermark_num:
+            case 1:
+                watermark = watermark2
+                watermark_num = 2
+            case 2:
+                watermark = watermark1
+                watermark_num = 1
 
-    if (int((end_time - start_time) % 5)) == 0:
-        frame = cv2.add(frame, watermark1)
-    else:
-        frame = cv2.add(frame, watermark2)
+    frame = cv2.add(frame, watermark)
 
     # Increase brightness if nighttime
     hsv = cv2.cvtColor(
@@ -73,13 +83,15 @@ for frame_count in range(0, int(total_no_frames)):  # To loop through all the fr
         blurArea = cv2.GaussianBlur(blurArea, (23, 23), 30)
         # Applying blur to actual frame
         frame[y : y + blurArea.shape[0], x : x + blurArea.shape[1]] = blurArea
-        cv2.imshow("Bounding", frame)
+        cv2.imshow("Demo", frame)
         if cv2.waitKey(1) & 0xFF == ord("q"):  # Wait for 1 millisecond.
             break
 
     out.write(frame)  # Save processed frame into the new video.
 
+# Ending screen
 ending = cv2.VideoCapture("./vids/endscreen.mp4")
+
 total_no_frames = ending.get(
     cv2.CAP_PROP_FRAME_COUNT
 )  # Get the total number of frames.
@@ -89,12 +101,12 @@ for frame_count in range(0, int(total_no_frames)):  # To loop through all the fr
     success, frame = ending.read()
     if not success:
         break
-
+    frame = cv2.resize(frame, resolution)
     if frame_count >= total_no_frames - 51 and frame_count <= total_no_frames:
         frame = cv2.subtract(frame, fade_val)
         fade_val += 5
 
-    cv2.imshow("Ending", frame)
+    cv2.imshow("Demo", frame)
     out.write(frame)
     if cv2.waitKey(1) & 0xFF == ord("q"):
         break
