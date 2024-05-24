@@ -1,7 +1,7 @@
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-
+import time
 
 # Obtain the path of the video from the user.
 # path = input("Enter the path of the video: ")
@@ -14,9 +14,14 @@ out = cv2.VideoWriter(
     30.0,  # Set the frame rate.
     (1280, 720),  # Set the resolution (width, height).
 )
+
+logo = cv2.imread("./imgs/logo.png")
+watermark1 = cv2.imread("./imgs/watermark1.png")
+watermark2 = cv2.imread("./imgs/watermark2.png")
 brightness_threshold = 135
 total_no_frames = vid.get(cv2.CAP_PROP_FRAME_COUNT)  # Get the total number of frames.
 fade_val = 255
+start_time = time.time()
 
 for frame_count in range(0, int(total_no_frames)):  # To loop through all the frames.
     success, frame = vid.read()  # Read a single frame from the video.
@@ -24,9 +29,20 @@ for frame_count in range(0, int(total_no_frames)):  # To loop through all the fr
     if not success:
         break  # break if the video is not present or error.
 
+    # Creating fade in effect
     if frame_count >= 0 and frame_count <= 50:
         frame = cv2.subtract(frame, fade_val)
         fade_val -= 5
+    # Adding logo to every frame
+    frame[606:670, 1166:1230] = logo
+
+    # Adding alternating watermark every 5s
+    end_time = time.time()
+
+    if (int((end_time - start_time) % 5)) == 0:
+        frame = cv2.add(frame, watermark1)
+    else:
+        frame = cv2.add(frame, watermark2)
 
     # Increase brightness if nighttime
     hsv = cv2.cvtColor(
