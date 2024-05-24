@@ -2,7 +2,10 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 
-# Read the video.
+# Obtain the path of the video from the user.
+path = input("Enter the path of the video: ")
+# vid = cv2.VideoCapture(path)
+# Read the video
 vid = cv2.VideoCapture("./vids/street.mp4")
 out = cv2.VideoWriter(
     "./processed_video.avi",  # Set the file name of the new video.
