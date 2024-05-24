@@ -4,20 +4,25 @@ import numpy as np
 import time
 
 # Obtain the path of the video from the user.
-# path = input("Enter the path of the video: ")
-# vid = cv2.VideoCapture(path)
+file_name = input("Enter the name of the video: ")
 # Read the video
-vid = cv2.VideoCapture("./vids/singapore.mp4")
+vid = cv2.VideoCapture(f"./vids/{file_name}.mp4")
+
+success, frame = vid.read()
+shape = frame.shape
+resolution = (shape[1], shape[0])
 out = cv2.VideoWriter(
-    "./processed_video.avi",  # Set the file name of the new video.
+    f"./out/{file_name}_processed_video.avi",  # Set the file name of the new video.
     cv2.VideoWriter_fourcc(*"MJPG"),  # Set the codec.
     30.0,  # Set the frame rate.
-    (1280, 720),  # Set the resolution (width, height).
+    resolution,  # Set the resolution (width, height).
 )
 
 logo = cv2.imread("./imgs/logo.png")
 watermark1 = cv2.imread("./imgs/watermark1.png")
+watermark1 = cv2.resize(watermark1, resolution)
 watermark2 = cv2.imread("./imgs/watermark2.png")
+watermark2 = cv2.resize(watermark2, resolution)
 brightness_threshold = 135
 total_no_frames = vid.get(cv2.CAP_PROP_FRAME_COUNT)  # Get the total number of frames.
 fade_val = 255
@@ -88,7 +93,7 @@ for frame_count in range(0, int(total_no_frames)):  # To loop through all the fr
     if frame_count >= total_no_frames - 51 and frame_count <= total_no_frames:
         frame = cv2.subtract(frame, fade_val)
         fade_val += 5
-        print(fade_val)
+
     cv2.imshow("Ending", frame)
     out.write(frame)
     if cv2.waitKey(1) & 0xFF == ord("q"):
