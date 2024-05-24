@@ -1,3 +1,5 @@
 .venv/
 vids/
 test/
+processed_video.*
+out/
