@@ -1,4 +1,6 @@
 import cv2
+import matplotlib.pyplot as plt
+import numpy as np
 
 #Read the video.
 vid = cv2.VideoCapture("street.mp4")
