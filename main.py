@@ -3,10 +3,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Obtain the path of the video from the user.
-path = input("Enter the path of the video: ")
+# path = input("Enter the path of the video: ")
 # vid = cv2.VideoCapture(path)
 # Read the video
-vid = cv2.VideoCapture("./vids/street.mp4")
+vid = cv2.VideoCapture("./vids/traffic.mp4")
 out = cv2.VideoWriter(
     "./processed_video.avi",  # Set the file name of the new video.
     cv2.VideoWriter_fourcc(*"MJPG"),  # Set the codec.
@@ -20,19 +20,18 @@ for frame_count in range(0, int(total_no_frames)):  # To loop through all the fr
     success, frame = vid.read()  # Read a single frame from the video.
     # Do something here.
     if not success:
-        break # break if the video is not present or error.
-    
-        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)  # Convert the frame from BGR to HSV color space.
-        v = hsv[:, :, 2]  # Extract the Value (brightness) channel from the HSV image.
-        mean_v = np.mean(v)  # Calculate the average brightness value.
+        break  # break if the video is not present or error.
 
-        total_brightness += mean_v  # Add the average brightness to the cumulative total.
+    hsv = cv2.cvtColor(
+        frame, cv2.COLOR_BGR2HSV
+    )  # Convert the frame from BGR to HSV color space.
+    pixel_values = hsv[
+        :, :, 2
+    ]  # Extract the Value (brightness) channel from the HSV image.
+    mean_v = np.mean(pixel_values)  # Calculate the average brightness value.
 
-        if mean_v < brightness_threshold:  # Check if the brightness is below the threshold.
-            frame = cv2.add(frame,50)
-        out.write(frame)  # Write the adjusted (or original) frame to the output video.
-
-
+    if mean_v < brightness_threshold:  # Check if the brightness is below the threshold.
+        frame = cv2.add(frame, 50)
 
     # Detect faces
     face_cascade = cv2.CascadeClassifier(
