@@ -14,7 +14,6 @@ face_detector_path = "../face_detector.xml"
 
 # Load videos
 main_vid = cv2.VideoCapture(main_video_path)
-talking_head_vid = cv2.VideoCapture(talking_head_path)
 
 # Load images
 logo = cv2.imread(logo_path)
