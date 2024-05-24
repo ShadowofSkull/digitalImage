@@ -2,26 +2,33 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 
+
 # Obtain the path of the video from the user.
 # path = input("Enter the path of the video: ")
 # vid = cv2.VideoCapture(path)
 # Read the video
-vid = cv2.VideoCapture("./vids/traffic.mp4")
+vid = cv2.VideoCapture("./vids/singapore.mp4")
 out = cv2.VideoWriter(
     "./processed_video.avi",  # Set the file name of the new video.
     cv2.VideoWriter_fourcc(*"MJPG"),  # Set the codec.
     30.0,  # Set the frame rate.
     (1280, 720),  # Set the resolution (width, height).
 )
-brightness_threshold = 120
-total_brightness = 0
+brightness_threshold = 135
 total_no_frames = vid.get(cv2.CAP_PROP_FRAME_COUNT)  # Get the total number of frames.
+fade_val = 255
+
 for frame_count in range(0, int(total_no_frames)):  # To loop through all the frames.
     success, frame = vid.read()  # Read a single frame from the video.
     # Do something here.
     if not success:
         break  # break if the video is not present or error.
 
+    if frame_count >= 0 and frame_count <= 50:
+        frame = cv2.subtract(frame, fade_val)
+        fade_val -= 5
+
+    # Increase brightness if nighttime
     hsv = cv2.cvtColor(
         frame, cv2.COLOR_BGR2HSV
     )  # Convert the frame from BGR to HSV color space.
@@ -31,7 +38,7 @@ for frame_count in range(0, int(total_no_frames)):  # To loop through all the fr
     mean_v = np.mean(pixel_values)  # Calculate the average brightness value.
 
     if mean_v < brightness_threshold:  # Check if the brightness is below the threshold.
-        frame = cv2.add(frame, 50)
+        frame = cv2.add(frame, 70)
 
     # Detect faces
     face_cascade = cv2.CascadeClassifier(
@@ -51,6 +58,27 @@ for frame_count in range(0, int(total_no_frames)):  # To loop through all the fr
 
     out.write(frame)  # Save processed frame into the new video.
 
+ending = cv2.VideoCapture("./vids/endscreen.mp4")
+total_no_frames = ending.get(
+    cv2.CAP_PROP_FRAME_COUNT
+)  # Get the total number of frames.
+
+fade_val = 0
+for frame_count in range(0, int(total_no_frames)):  # To loop through all the frames.
+    success, frame = ending.read()
+    if not success:
+        break
+
+    if frame_count >= total_no_frames - 51 and frame_count <= total_no_frames:
+        frame = cv2.subtract(frame, fade_val)
+        fade_val += 5
+        print(fade_val)
+    cv2.imshow("Ending", frame)
+    out.write(frame)
+    if cv2.waitKey(1) & 0xFF == ord("q"):
+        break
+
 vid.release()  # Release the video capture object.
+ending.release()
 out.release()  # Release the video writer object.
 cv2.destroyAllWindows()  # Close all the windows.
