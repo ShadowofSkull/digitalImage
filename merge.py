@@ -24,8 +24,8 @@ logo_spacing = 50
 # import overlay
 talking_vid = cv2.VideoCapture('./vids/talking.mp4')
 # Overlay parameters (bottom left)
-overlay_width = int(vid.get(3) * 0.25)  # 25% of main video width
-overlay_height = int(vid.get(4) * 0.25)  # 25% of main video height
+overlay_width = int(vid.get(3) * 0.40)  # 40% of main video width
+overlay_height = int(vid.get(4) * 0.40)  # 40% of main video height
 x_offset = 0
 y_offset = int(vid.get(4)) - overlay_height
 
@@ -95,7 +95,7 @@ for frame_count in range(0, int(total_no_frames)):  # To loop through all the fr
         
         
     if talking_ret:
-        talking_frame = cv2.resize(talking_frame,(int(vid.get(3) * 0.25), int(vid.get(4) * 0.25)))
+        talking_frame = cv2.resize(talking_frame,(int(vid.get(3) * 0.40), int(vid.get(4) * 0.40)))
         
         hsv = cv2.cvtColor(talking_frame, cv2.COLOR_BGR2HSV)
         lGreen = np.array([36,25,25])
@@ -105,7 +105,7 @@ for frame_count in range(0, int(total_no_frames)):  # To loop through all the fr
         
         # Extract the foreground and background
         foreground = cv2.bitwise_and(talking_frame, talking_frame, mask = mask_inv)
-        background = cv2.bitwise_and(frame[y_offset:y_offset+overlay_height, x_offset:x_offset+overlay_width])       
+        background = cv2.bitwise_and(frame[y_offset:y_offset+overlay_height, x_offset:x_offset+overlay_width], frame[y_offset:y_offset+overlay_height, x_offset:x_offset+overlay_width], mask=mask)       
         
         # combine the foreground and background
         overlay = cv2.add(foreground, background)
