@@ -22,7 +22,7 @@ logo_size = 64
 logo_spacing = 50
 
 # import overlay
-talking_vid = cv2.VideoCapture('./vids/talking.mp4')
+talking_vid = cv2.VideoCapture("./vids/talking.mp4")
 # Overlay parameters (bottom left)
 overlay_width = int(vid.get(3) * 0.25)  # 25% of main video width
 overlay_height = int(vid.get(4) * 0.25)  # 25% of main video height
@@ -42,7 +42,9 @@ fade_val = 255
 
 for frame_count in range(0, int(total_no_frames)):  # To loop through all the frames.
     success, frame = vid.read()  # Read a single frame from the video.
-    talking_ret, talking_frame = talking_vid.read() # Read a single frame from the video.
+    talking_ret, talking_frame = (
+        talking_vid.read()
+    )  # Read a single frame from the video.
 
     # Do something here.
     if not success:
@@ -53,8 +55,10 @@ for frame_count in range(0, int(total_no_frames)):  # To loop through all the fr
         frame = cv2.subtract(frame, fade_val)
         fade_val -= 5
     # Adding logo to every frame
-    
-    frame[logo_spacing: logo_spacing + logo_size, logo_spacing: logo_spacing + logo_size] = logo
+
+    frame[
+        logo_spacing : logo_spacing + logo_size, logo_spacing : logo_spacing + logo_size
+    ] = logo
 
     # Adding alternating watermark every 5s
     frames_per_5s = int(fps * 5)
@@ -93,26 +97,31 @@ for frame_count in range(0, int(total_no_frames)):  # To loop through all the fr
         blurArea = cv2.GaussianBlur(blurArea, (23, 23), 30)
         # Applying blur to actual frame
         frame[y : y + blurArea.shape[0], x : x + blurArea.shape[1]] = blurArea
-        
-        
-    # Talking video overlay    
+
+    # Talking video overlay
     if talking_ret:
-        talking_frame = cv2.resize(talking_frame,(int(vid.get(3) * 0.25), int(vid.get(4) * 0.25)))
-        
+        talking_frame = cv2.resize(
+            talking_frame, (int(vid.get(3) * 0.25), int(vid.get(4) * 0.25))
+        )
+
         hsv = cv2.cvtColor(talking_frame, cv2.COLOR_BGR2HSV)
-        lGreen = np.array([36,25,25])
-        uGreen = np.array([70,255,255])
+        lGreen = np.array([36, 25, 25])
+        uGreen = np.array([70, 255, 255])
         mask = cv2.inRange(hsv, lGreen, uGreen)
-        mask_inv = cv2.bitwise_not(mask) 
-        
+        mask_inv = cv2.bitwise_not(mask)
+        roi = frame[
+            y_offset : y_offset + overlay_height, x_offset : x_offset + overlay_width
+        ]
         # Extract the foreground and background
-        foreground = cv2.bitwise_and(talking_frame, talking_frame, mask = mask_inv)
-        background = cv2.bitwise_and(frame[y_offset:y_offset+overlay_height, x_offset:x_offset+overlay_width])       
-        
+        foreground = cv2.bitwise_and(talking_frame, talking_frame, mask=mask_inv)
+        background = cv2.bitwise_and(roi, roi, mask=mask)
+
         # combine the foreground and background
         overlay = cv2.add(foreground, background)
-        frame[y_offset:y_offset+overlay_height, x_offset:x_offset+overlay_width] = overlay
-        
+        frame[
+            y_offset : y_offset + overlay_height, x_offset : x_offset + overlay_width
+        ] = overlay
+
         cv2.imshow("Demo", frame)
         if cv2.waitKey(1) & 0xFF == ord("q"):  # Wait for 1 millisecond.
             break
