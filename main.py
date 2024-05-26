@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 
+
 # Create fade effect
 def fade(frame, fade_val, brightness):
     frame = cv2.subtract(frame, fade_val)
@@ -10,6 +11,27 @@ def fade(frame, fade_val, brightness):
     elif brightness == "decrease":
         fade_val -= rate
     return fade_val, frame
+
+
+# def faceDetection():
+#         # Detect faces
+#     face_cascade = cv2.CascadeClassifier(
+#         "./face_detector.xml"
+#     )  # Load pre-trained Haar cascade model.
+#     faces = face_cascade.detectMultiScale(frame, 1.3, 5)  # Perform face detection.
+
+#     print(faces)
+#     if previousFacesAmount > len(faces):
+
+#     for x, y, w, h in faces:  # To loop through all the detected faces.
+#         blurArea = frame[y : y + h, x : x + w]
+#         nextBlurArea = frame[y : y + h, x : x + w]
+#         # Blurring the faces
+#         blurArea = cv2.GaussianBlur(blurArea, (23, 23), 30)
+#         # Applying blur to actual frame
+#         frame[y : y + blurArea.shape[0], x : x + blurArea.shape[1]] = blurArea
+
+#     previousFacesAmount = len(faces)
 
 # Obtain the path of the video from the user.
 file_name = input("Enter the name of the video (no ext e.g. mp4): ")
@@ -50,6 +72,8 @@ brightness_threshold = 135
 total_no_frames = vid.get(cv2.CAP_PROP_FRAME_COUNT)  # Get the total number of frames.
 black = 255
 fade_val = black
+previousFacesAmount = 0
+detectInterval = 10
 
 for frame_count in range(0, int(total_no_frames)):  # To loop through all the frames.
     success, frame = vid.read()  # Read a single frame from the video.
@@ -61,7 +85,6 @@ for frame_count in range(0, int(total_no_frames)):  # To loop through all the fr
     if not success:
         break  # break if the video is not present or error.
 
- 
     # Adding logo to every frame
 
     frame[
@@ -93,18 +116,32 @@ for frame_count in range(0, int(total_no_frames)):  # To loop through all the fr
     if mean_v < brightness_threshold:  # Check if the brightness is below the threshold.
         frame = cv2.add(frame, 70)
 
-    # Detect faces
-    face_cascade = cv2.CascadeClassifier(
-        "./face_detector.xml"
-    )  # Load pre-trained Haar cascade model.
-    faces = face_cascade.detectMultiScale(frame, 1.3, 5)  # Perform face detection.
+    # Detect faces every 6 frame only detect once
+    if frame_count % detectInterval == 0:
+        face_cascade = cv2.CascadeClassifier(
+            "./face_detector.xml"
+        )  # Load pre-trained Haar cascade model.
+        faces = face_cascade.detectMultiScale(frame, 1.3, 5)  # Perform face detection.
+    # print(f"{faces}\n")
+    # if previousFacesAmount > len(faces):
+    #     for x, y, w, h in previousFaces:  # To loop through all the detected faces.
+    #         blurArea = frame[y : y + h, x : x + w]
+    #         # Blurring the faces
+    #         blurArea = cv2.GaussianBlur(blurArea, (23, 23), 30)
+    #         # Applying blur to actual frame
+    #         frame[y : y + blurArea.shape[0], x : x + blurArea.shape[1]] = blurArea
+    #         print("activate previous")
+    # else:
     for x, y, w, h in faces:  # To loop through all the detected faces.
-
         blurArea = frame[y : y + h, x : x + w]
+        nextBlurArea = frame[y : y + h, x : x + w]
         # Blurring the faces
         blurArea = cv2.GaussianBlur(blurArea, (23, 23), 30)
         # Applying blur to actual frame
         frame[y : y + blurArea.shape[0], x : x + blurArea.shape[1]] = blurArea
+
+    previousFacesAmount = len(faces)
+    previousFaces = faces
 
     # Talking video overlay
     if talking_ret:
@@ -117,6 +154,7 @@ for frame_count in range(0, int(total_no_frames)):  # To loop through all the fr
         uGreen = np.array([70, 255, 255])
         mask = cv2.inRange(hsv, lGreen, uGreen)
         mask_inv = cv2.bitwise_not(mask)
+        # Region of Interest (ROI) in the frame
         roi = frame[
             y_offset : y_offset + overlay_height, x_offset : x_offset + overlay_width
         ]
@@ -130,14 +168,12 @@ for frame_count in range(0, int(total_no_frames)):  # To loop through all the fr
             y_offset : y_offset + overlay_height, x_offset : x_offset + overlay_width
         ] = overlay
 
-
-    
-    # Creating fade in/out effect 
+    # Creating fade in/out effect
     if frame_count >= 0 and frame_count <= 50:
         fade_val, frame = fade(frame, fade_val, "decrease")
     elif frame_count >= total_no_frames - 51 and frame_count < total_no_frames:
         fade_val, frame = fade(frame, fade_val, "increase")
-    
+
     out.write(frame)  # Save processed frame into the new video.
 
 # Ending screen
@@ -152,6 +188,7 @@ for frame_count in range(0, int(total_no_frames)):  # To loop through all the fr
     success, frame = ending.read()
     if not success:
         break
+    # Resize frame to match the resolution of the main video
     frame = cv2.resize(frame, resolution)
     if frame_count >= total_no_frames - 51 and frame_count < total_no_frames:
         fade(frame, fade_val, "decrease")
