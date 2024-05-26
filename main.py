@@ -13,26 +13,6 @@ def fade(frame, fade_val, brightness):
     return fade_val, frame
 
 
-# def faceDetection():
-#         # Detect faces
-#     face_cascade = cv2.CascadeClassifier(
-#         "./face_detector.xml"
-#     )  # Load pre-trained Haar cascade model.
-#     faces = face_cascade.detectMultiScale(frame, 1.3, 5)  # Perform face detection.
-
-#     print(faces)
-#     if previousFacesAmount > len(faces):
-
-#     for x, y, w, h in faces:  # To loop through all the detected faces.
-#         blurArea = frame[y : y + h, x : x + w]
-#         nextBlurArea = frame[y : y + h, x : x + w]
-#         # Blurring the faces
-#         blurArea = cv2.GaussianBlur(blurArea, (23, 23), 30)
-#         # Applying blur to actual frame
-#         frame[y : y + blurArea.shape[0], x : x + blurArea.shape[1]] = blurArea
-
-#     previousFacesAmount = len(faces)
-
 # Obtain the path of the video from the user.
 file_name = input("Enter the name of the video (no ext e.g. mp4): ")
 # Read the video
@@ -72,7 +52,7 @@ brightness_threshold = 135
 total_no_frames = vid.get(cv2.CAP_PROP_FRAME_COUNT)  # Get the total number of frames.
 black = 255
 fade_val = black
-previousFacesAmount = 0
+
 detectInterval = 10
 
 for frame_count in range(0, int(total_no_frames)):  # To loop through all the frames.
@@ -122,16 +102,7 @@ for frame_count in range(0, int(total_no_frames)):  # To loop through all the fr
             "./face_detector.xml"
         )  # Load pre-trained Haar cascade model.
         faces = face_cascade.detectMultiScale(frame, 1.3, 5)  # Perform face detection.
-    # print(f"{faces}\n")
-    # if previousFacesAmount > len(faces):
-    #     for x, y, w, h in previousFaces:  # To loop through all the detected faces.
-    #         blurArea = frame[y : y + h, x : x + w]
-    #         # Blurring the faces
-    #         blurArea = cv2.GaussianBlur(blurArea, (23, 23), 30)
-    #         # Applying blur to actual frame
-    #         frame[y : y + blurArea.shape[0], x : x + blurArea.shape[1]] = blurArea
-    #         print("activate previous")
-    # else:
+
     for x, y, w, h in faces:  # To loop through all the detected faces.
         blurArea = frame[y : y + h, x : x + w]
         nextBlurArea = frame[y : y + h, x : x + w]
@@ -140,8 +111,6 @@ for frame_count in range(0, int(total_no_frames)):  # To loop through all the fr
         # Applying blur to actual frame
         frame[y : y + blurArea.shape[0], x : x + blurArea.shape[1]] = blurArea
 
-    previousFacesAmount = len(faces)
-    previousFaces = faces
 
     # Talking video overlay
     if talking_ret:
