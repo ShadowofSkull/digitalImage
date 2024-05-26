@@ -4,21 +4,25 @@ import numpy as np
 
 # Create fade effect
 def fade(frame, fade_val, brightness):
+    # Remove brightness val from frame
     frame = cv2.subtract(frame, fade_val)
     rate = 5
-    if brightness == "increase":
+    # Increase value to remove which make the next frame darker
+    if brightness == "darken":
         fade_val += rate
-    elif brightness == "decrease":
+    # Decrease value to remove which make the next frame brighter
+    elif brightness == "brighten":
         fade_val -= rate
     return fade_val, frame
 
-
-# Obtain the path of the video from the user.
+# Initialising variables:
+# Obtain the path of the video to process from the user.
 file_name = input("Enter the name of the video (no ext e.g. mp4): ")
 # Read the video
 vid = cv2.VideoCapture(f"./vids/{file_name}.mp4")
 
 fps = 30.0
+# Obtain the resolution of the video.
 success, frame = vid.read()
 shape = frame.shape
 resolution = (shape[1], shape[0])
@@ -29,6 +33,7 @@ out = cv2.VideoWriter(
     resolution,  # Set the resolution (width, height).
 )
 
+# Import logo (Incorrect need draw with opencv apparently)
 logo = cv2.imread("./imgs/logo.png")
 logo_size = 64
 logo_spacing = 50
@@ -48,13 +53,15 @@ watermark2 = cv2.imread("./imgs/watermark2.png")
 watermark2 = cv2.resize(watermark2, resolution)
 # Set the watermark to be displayed initially
 watermark_num = 2
+# Set cut off value to determine time of day
 brightness_threshold = 135
 total_no_frames = vid.get(cv2.CAP_PROP_FRAME_COUNT)  # Get the total number of frames.
-black = 255
-fade_val = black
+# Starting brightness value to negate for fade in/out effect
+fade_val = 255
+# Amount of frames before detecting faces
+detectInterval = 8
 
-detectInterval = 10
-
+# Processing of video frames takes place here:
 for frame_count in range(0, int(total_no_frames)):  # To loop through all the frames.
     success, frame = vid.read()  # Read a single frame from the video.
     talking_ret, talking_frame = (
@@ -96,7 +103,7 @@ for frame_count in range(0, int(total_no_frames)):  # To loop through all the fr
     if mean_v < brightness_threshold:  # Check if the brightness is below the threshold.
         frame = cv2.add(frame, 70)
 
-    # Detect faces every 6 frame only detect once
+    # Detect faces at a interval
     if frame_count % detectInterval == 0:
         face_cascade = cv2.CascadeClassifier(
             "./face_detector.xml"
@@ -105,11 +112,10 @@ for frame_count in range(0, int(total_no_frames)):  # To loop through all the fr
 
     for x, y, w, h in faces:  # To loop through all the detected faces.
         blurArea = frame[y : y + h, x : x + w]
-        nextBlurArea = frame[y : y + h, x : x + w]
         # Blurring the faces
         blurArea = cv2.GaussianBlur(blurArea, (23, 23), 30)
         # Applying blur to actual frame
-        frame[y : y + blurArea.shape[0], x : x + blurArea.shape[1]] = blurArea
+        frame[y : y + h, x : x + w] = blurArea
 
 
     # Talking video overlay
@@ -139,32 +145,34 @@ for frame_count in range(0, int(total_no_frames)):  # To loop through all the fr
 
     # Creating fade in/out effect
     if frame_count >= 0 and frame_count <= 50:
-        fade_val, frame = fade(frame, fade_val, "decrease")
+        fade_val, frame = fade(frame, fade_val, "brighten")
     elif frame_count >= total_no_frames - 51 and frame_count < total_no_frames:
-        fade_val, frame = fade(frame, fade_val, "increase")
+        fade_val, frame = fade(frame, fade_val, "darken")
 
     out.write(frame)  # Save processed frame into the new video.
 
-# Ending screen
+# Add Ending screen
 ending = cv2.VideoCapture("./vids/endscreen.mp4")
 
 total_no_frames = ending.get(
     cv2.CAP_PROP_FRAME_COUNT
 )  # Get the total number of frames.
 
-fade_val = 255
+fade_val = 0
 for frame_count in range(0, int(total_no_frames)):  # To loop through all the frames.
     success, frame = ending.read()
     if not success:
         break
     # Resize frame to match the resolution of the main video
     frame = cv2.resize(frame, resolution)
+    # Creating fade out effect
     if frame_count >= total_no_frames - 51 and frame_count < total_no_frames:
-        fade(frame, fade_val, "decrease")
+        fade_val, frame = fade(frame, fade_val, "darken")
+    # Save processed frame into the new video.
     out.write(frame)
 
 
 vid.release()  # Release the video capture object.
-ending.release()
+ending.release() # Release the video capture object.
 out.release()  # Release the video writer object.
-cv2.destroyAllWindows()  # Close all the windows.
+
