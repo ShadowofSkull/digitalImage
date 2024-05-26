@@ -1,6 +1,16 @@
 import cv2
 import numpy as np
 
+# Create fade effect
+def fade(frame, fade_val, brightness):
+    frame = cv2.subtract(frame, fade_val)
+    rate = 5
+    if brightness == "increase":
+        fade_val += rate
+    elif brightness == "decrease":
+        fade_val -= rate
+    return fade_val, frame
+
 # Obtain the path of the video from the user.
 file_name = input("Enter the name of the video (no ext e.g. mp4): ")
 # Read the video
@@ -38,7 +48,8 @@ watermark2 = cv2.resize(watermark2, resolution)
 watermark_num = 2
 brightness_threshold = 135
 total_no_frames = vid.get(cv2.CAP_PROP_FRAME_COUNT)  # Get the total number of frames.
-fade_val = 255
+black = 255
+fade_val = black
 
 for frame_count in range(0, int(total_no_frames)):  # To loop through all the frames.
     success, frame = vid.read()  # Read a single frame from the video.
@@ -50,10 +61,7 @@ for frame_count in range(0, int(total_no_frames)):  # To loop through all the fr
     if not success:
         break  # break if the video is not present or error.
 
-    # Creating fade in effect
-    if frame_count >= 0 and frame_count <= 50:
-        frame = cv2.subtract(frame, fade_val)
-        fade_val -= 5
+ 
     # Adding logo to every frame
 
     frame[
@@ -122,10 +130,14 @@ for frame_count in range(0, int(total_no_frames)):  # To loop through all the fr
             y_offset : y_offset + overlay_height, x_offset : x_offset + overlay_width
         ] = overlay
 
-        cv2.imshow("Demo", frame)
-        if cv2.waitKey(1) & 0xFF == ord("q"):  # Wait for 1 millisecond.
-            break
 
+    
+    # Creating fade in/out effect 
+    if frame_count >= 0 and frame_count <= 50:
+        fade_val, frame = fade(frame, fade_val, "decrease")
+    elif frame_count >= total_no_frames - 51 and frame_count < total_no_frames:
+        fade_val, frame = fade(frame, fade_val, "increase")
+    
     out.write(frame)  # Save processed frame into the new video.
 
 # Ending screen
@@ -135,20 +147,16 @@ total_no_frames = ending.get(
     cv2.CAP_PROP_FRAME_COUNT
 )  # Get the total number of frames.
 
-fade_val = 0
+fade_val = 255
 for frame_count in range(0, int(total_no_frames)):  # To loop through all the frames.
     success, frame = ending.read()
     if not success:
         break
     frame = cv2.resize(frame, resolution)
-    if frame_count >= total_no_frames - 51 and frame_count <= total_no_frames:
-        frame = cv2.subtract(frame, fade_val)
-        fade_val += 5
-
-    cv2.imshow("Demo", frame)
+    if frame_count >= total_no_frames - 51 and frame_count < total_no_frames:
+        fade(frame, fade_val, "decrease")
     out.write(frame)
-    if cv2.waitKey(1) & 0xFF == ord("q"):
-        break
+
 
 vid.release()  # Release the video capture object.
 ending.release()
