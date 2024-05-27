@@ -15,6 +15,7 @@ def fade(frame, fade_val, brightness):
         fade_val -= rate
     return fade_val, frame
 
+
 # Initialising variables:
 # Obtain the path of the video to process from the user.
 file_name = input("Enter the name of the video (no ext e.g. mp4): ")
@@ -33,10 +34,9 @@ out = cv2.VideoWriter(
     resolution,  # Set the resolution (width, height).
 )
 
-# Import logo (Incorrect need draw with opencv apparently)
-logo = cv2.imread("./imgs/logo.png")
+# Logo position variables
 logo_size = 64
-logo_spacing = 50
+logo_padding = 50
 
 # import overlay
 talking_vid = cv2.VideoCapture("./vids/talking.mp4")
@@ -73,11 +73,23 @@ for frame_count in range(0, int(total_no_frames)):  # To loop through all the fr
         break  # break if the video is not present or error.
 
     # Adding logo to every frame
-
+    # Create a black background for logo and set its size
+    logo = np.zeros((64, 64, 3), np.uint8)
+    # Sets the coordinates the line will be drawn between
+    pts = np.array(
+        [[32, 10], [16, 54], [54, 32], [10, 32], [48, 54], [32, 10]], np.int32
+    )
+    print(resolution[1])
+    # Draw lines according to the coordinates to create a star
+    cv2.polylines(logo, [pts], True, (0, 255, 255))
+    # [y1:y2, x1:x2]
+    print(frame.shape)
     frame[
-        logo_spacing : logo_spacing + logo_size, logo_spacing : logo_spacing + logo_size
+        logo_padding : logo_padding + logo_size,
+        resolution[0] - logo_padding - logo_size : resolution[0] - logo_padding,
     ] = logo
-
+    cv2.imshow("frame", frame)
+    cv2.waitKey(1)
     # Adding alternating watermark every 5s
     frames_per_5s = int(fps * 5)
     if frame_count % frames_per_5s == 0:
@@ -116,7 +128,6 @@ for frame_count in range(0, int(total_no_frames)):  # To loop through all the fr
         blurArea = cv2.GaussianBlur(blurArea, (23, 23), 30)
         # Applying blur to actual frame
         frame[y : y + h, x : x + w] = blurArea
-
 
     # Talking video overlay
     if talking_ret:
@@ -173,6 +184,5 @@ for frame_count in range(0, int(total_no_frames)):  # To loop through all the fr
 
 
 vid.release()  # Release the video capture object.
-ending.release() # Release the video capture object.
+ending.release()  # Release the video capture object.
 out.release()  # Release the video writer object.
-
