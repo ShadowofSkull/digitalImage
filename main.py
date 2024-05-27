@@ -79,17 +79,13 @@ for frame_count in range(0, int(total_no_frames)):  # To loop through all the fr
     pts = np.array(
         [[32, 10], [16, 54], [54, 32], [10, 32], [48, 54], [32, 10]], np.int32
     )
-    print(resolution[1])
     # Draw lines according to the coordinates to create a star
     cv2.polylines(logo, [pts], True, (0, 255, 255))
     # [y1:y2, x1:x2]
-    print(frame.shape)
     frame[
         logo_padding : logo_padding + logo_size,
         resolution[0] - logo_padding - logo_size : resolution[0] - logo_padding,
     ] = logo
-    cv2.imshow("frame", frame)
-    cv2.waitKey(1)
     # Adding alternating watermark every 5s
     frames_per_5s = int(fps * 5)
     if frame_count % frames_per_5s == 0:
