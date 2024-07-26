@@ -68,7 +68,7 @@ for frame_count in range(0, int(total_no_frames)):  # To loop through all the fr
         talking_vid.read()
     )  # Read a single frame from the video.
 
-    # Do something here.
+
     if not success:
         break  # break if the video is not present or error.
 
